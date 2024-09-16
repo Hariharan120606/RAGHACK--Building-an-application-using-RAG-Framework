@@ -1,0 +1,265 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "a9bff53e",
+   "metadata": {},
+   "source": [
+    "# Basic RAG Pipeline"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "60175c42-62b9-4eca-a1e1-2a5846d1fc9a",
+   "metadata": {},
+   "source": 
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ec9fd12c-8c5e-452d-bcf9-01e1c0eb6fbe",
+   "metadata": {},
+   "source": [
+    "**Retrieval Augmented Generation (RAG)**\n",
+    "\n",
+    "LLMs are trained on vast datasets, but these will not include your specific data. Retrieval-Augmented Generation (RAG) addresses this by dynamically incorporating your data during the generation process. This is done not by altering the training data of LLMs, but by allowing the model to access and utilize your data in real-time to provide more tailored and contextually relevant responses.\n",
+    "\n",
+    "In RAG, your data is loaded and prepared for queries or “indexed”. User queries act on the index, which filters your data down to the most relevant context. This context and your query then go to the LLM along with a prompt, and the LLM provides a response.\n",
+    "\n",
+    "Even if what you’re building is a chatbot or an agent, you’ll want to know RAG techniques for getting data into your application."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "bfd18319-426e-4bdc-892b-49c38750976f",
+   "metadata": {},
+   "source": [
+    "![RAG Overview](../data/llamaindex_rag_overview.png)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "fa39061c-f0fa-443b-8b76-4a1fc0ce9e90",
+   "metadata": {},
+   "source": [
+    "**Stages within RAG**\n",
+    "**Loading, **"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5cfa1339-3e31-46cd-9ba4-a58165feeda6",
+   "metadata": {},
+   "source": [
+    "## Build RAG system.\n",
+    "\n",
+    "Now that we have understood the significance of RAG system, let's build a simple basic RAG pipeline."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "224bad36-4af8-496b-a07d-7e172616f059",
+   "metadata": {},
+   "source": [
+    "Set Your OpenAI API Key"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "49305594-8986-44e5-8d7d-27f76df9981b",
+   "metadata": {
+    "height": 98,
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/Users/henry/anaconda3/envs/NLP/lib/python3.8/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html\n",
+      "  from .autonotebook import tqdm as notebook_tqdm\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "✅ In Answer Relevance, input prompt will be set to __record__.main_input or `Select.RecordInput` .\n",
+      "✅ In Answer Relevance, input response will be set to __record__.main_output or `Select.RecordOutput` .\n",
+      "✅ In Context Relevance, input prompt will be set to __record__.main_input or `Select.RecordInput` .\n",
+      "✅ In Context Relevance, input response will be set to __record__.app.query.rets.source_nodes[:].node.text .\n",
+      "✅ In Groundedness, input source will be set to __record__.app.query.rets.source_nodes[:].node.text .\n",
+      "✅ In Groundedness, input statement will be set to __record__.main_output or `Select.RecordOutput` .\n"
+     ]
+    }
+   ],
+   "source": [
+    "import sys\n",
+    "sys.path.insert(0, '..')\n",
+    "\n",
+    "import common.utils\n",
+    "import os\n",
+    "import openai\n",
+    "openai.api_key = common.utils.get_openai_api_key()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1a850ab0-6d83-493a-a829-956e146c64e1",
+   "metadata": {},
+   "source": [
+    "#### Load Data and Build Index."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "101152e6",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from llama_index import SimpleDirectoryReader\n",
+    "\n",
+    "documents = SimpleDirectoryReader(\n",
+    "    input_files=[\"../data/Hari.txt\"]\n",
+    ").load_data()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "2d7d0857-b9d1-4feb-8243-bfd2f4953acd",
+   "metadata": {
+    "height": 81,
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'list'> \n",
+      "\n",
+      "1 \n",
+      "\n",
+      "<class 'llama_index.schema.Document'>\n",
+      "Doc ID: 9e4ed240-1cd5-4c00-bd39-57392ec1ffcb\n",
+      "Text: History   Hari, with his perfect jawline and black hair, has captivated the hearts of many in Cochabamba, earning him the title of the most handsome boy in the city. His perfect build and expressive eyes make heads turn wherever he goes. Beyond his physical appearance, Hari possesses an innate grace and confidence that truly sets him apart."
+     ]
+    }
+   ],
+   "source": [
+    "print(type(documents), \"\\n\")\n",
+    "print(len(documents), \"\\n\")\n",
+    "print(type(documents[0]))\n",
+    "print(documents[0])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f3123d3d",
+   "metadata": {},
+   "source": [
+    "concatenate all documents"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "b4abc806-64f5-46bb-8c9f-6469ecb18d20",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from llama_index import Document\n",
+    "\n",
+    "document = Document(text=\"\\n\\n\".join([doc.text for doc in documents]))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "43dc3c7b",
+   "metadata": {},
+   "source": [
+    "#### Build and Query Index"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "dc8a6c76",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from llama_index.node_parser import SimpleNodeParser\n",
+    "from llama_index import VectorStoreIndex\n",
+    "from llama_index import ServiceContext\n",
+    "from llama_index.llms import OpenAI\n",
+    "\n",
+    "llm = OpenAI(model=\"gpt-3.5-turbo\")\n",
+    "\n",
+    "node_parser = SimpleNodeParser.from_defaults(chunk_size=64, chunk_overlap=2)\n",
+    "nodes = node_parser.get_nodes_from_documents(documents)\n",
+    "index = VectorStoreIndex(nodes)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "350b6101",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "query_engine = index.as_query_engine()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "7a92cc7b",
+   "metadata": {
+    "height": 170,
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Who is the pretty boy in Cochabamba?\n",
+      "Doc ID: 9e4ed240-1cd5-4c00-bd39-57392ec1ffcb\n",
+      "Text: History   Hari, with his perfect jawline and black hair, has captivated the hearts of many in Cochabamba, earning him the title of the most handsome boy in the city. His perfect build and expressive eyes make heads turn wherever he goes. Beyond his physical appearance, Hari possesses an innate grace and confidence that truly sets him apart."
+     ]
+    }
+   ],
+   "source": [
+    "response = query_engine.query(\n",
+    "    \"Who is the pretty boy in Cochabamba?\"\n",
+    ")\n",
+    "print(str(response))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "c6eb38d4",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "கோச்சபாம்பாவில் மிகவும் அழகான பையன் யார்?？\n",
+      "Doc ID: 9e4ed240-1cd5-4c00-bd39-57392ec1ffcb\n",
+      "Text: History   Hari, with his perfect jawline and black hair, has captivated the hearts of many in Cochabamba, earning him the title of the most handsome boy in the city. His perfect build and expressive eyes make heads turn wherever he goes. Beyond his physical appearance, Hari possesses an innate grace and confidence that truly sets him apart."
+     ]
+    }
+   ],
+   "source": [
+    "response = query_engine.query(\n",
+    "    \"கோச்சபாம்பாவில் மிகவும் அழகான பையன் யார்?？\"\n",
+    ")\n",
+    "print(str(response))"
+   ]
+  }
+ ]
+}
