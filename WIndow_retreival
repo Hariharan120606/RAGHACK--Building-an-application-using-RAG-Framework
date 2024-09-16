@@ -1,0 +1,251 @@
+import sys
+sys.path.insert(0, '..')
+
+import common.utils
+import os
+import openai
+openai.api_key = common.utils.get_openai_api_key()
+
+from llama_index import SimpleDirectoryReader
+from llama_index import Document
+
+documents = SimpleDirectoryReader(
+    input_files=["../data/Hari.txt"]
+).load_data()
+
+document = Document(text="\n\n".join([doc.text for doc in documents]))
+
+from llama_index.node_parser import SentenceWindowNodeParser
+
+node_parser = SentenceWindowNodeParser.from_defaults(
+    window_size=2,
+    window_metadata_key="window",
+    original_text_metadata_key="original_text",
+)
+
+text = "hello. how are you? I am fine!  "
+
+nodes = node_parser.get_nodes_from_documents([Document(text=text)])
+
+from llama_index.llms import OpenAI
+
+llm = OpenAI(model="gpt-3.5-turbo", temperature=0.1)
+
+from llama_index import ServiceContext
+
+sentence_context = ServiceContext.from_defaults(
+    llm=llm,
+    embed_model="local:BAAI/bge-small-en-v1.5",
+    node_parser=node_parser,
+)
+
+from llama_index import VectorStoreIndex
+
+sentence_index = VectorStoreIndex.from_documents(
+    [document], service_context=sentence_context
+)
+
+sentence_index.storage_context.persist(persist_dir="./sentence_index")
+
+from llama_index.indices.postprocessor import MetadataReplacementPostProcessor
+
+postproc = MetadataReplacementPostProcessor(
+    target_metadata_key="window"
+)
+
+from llama_index.schema import NodeWithScore
+from copy import deepcopy
+
+scored_nodes = [NodeWithScore(node=x, score=1.0) for x in nodes]
+nodes_old = [deepcopy(n) for n in nodes]
+
+replaced_nodes = postproc.postprocess_nodes(scored_nodes)
+
+from llama_index.indices.postprocessor import SentenceTransformerRerank
+
+rerank = SentenceTransformerRerank(
+    top_n=2, model="BAAI/bge-reranker-base"
+)
+
+from llama_index import QueryBundle
+from llama_index.schema import TextNode, NodeWithScore
+
+query = QueryBundle("I want a dog.")
+
+scored_nodes = [
+    NodeWithScore(node=TextNode(text="This is a cat"), score=0.6),
+    NodeWithScore(node=TextNode(text="This is a dog"), score=0.4),
+]
+
+reranked_nodes = rerank.postprocess_nodes(
+    scored_nodes, query_bundle=query
+)
+
+from llama_index.indices.postprocessor import MetadataReplacementPostProcessor
+
+postproc = MetadataReplacementPostProcessor(target_metadata_key="window")
+
+from llama_index.schema import NodeWithScore
+from copy import deepcopy
+
+scored_nodes = [NodeWithScore(node=x, score=1.0) for x in nodes]
+nodes_old = [deepcopy(n) for n in nodes]
+
+replaced_nodes = postproc.postprocess_nodes(scored_nodes)
+
+from llama_index.indices.postprocessor import SentenceTransformerRerank
+
+rerank = SentenceTransformerRerank(
+    top_n=2, model="BAAI/bge-reranker-base"
+)
+
+from llama_index import QueryBundle
+from llama_index.schema import TextNode, NodeWithScore
+
+query = QueryBundle("I want a dog.")
+
+scored_nodes = [
+    NodeWithScore(node=TextNode(text="This is a cat"), score=0.6),
+    NodeWithScore(node=TextNode(text="This is a dog"), score=0.4),
+]
+
+reranked_nodes = rerank.postprocess_nodes(
+    scored_nodes, query_bundle=query
+)
+
+from llama_index.indices.postprocessor import MetadataReplacementPostProcessor
+
+postproc = MetadataReplacementPostProcessor(target_metadata_key="window")
+
+from llama_index.schema import NodeWithScore
+from copy import deepcopy
+
+scored_nodes = [NodeWithScore(node=x, score=1.0) for x in nodes]
+nodes_old = [deepcopy(n) for n in nodes]
+
+replaced_nodes = postproc.postprocess_nodes(scored_nodes)
+
+from llama_index.indices.postprocessor import SentenceTransformerRerank
+
+rerank = SentenceTransformerRerank(
+    top_n=2, model="BAAI/bge-reranker-base"
+)
+
+from llama_index import QueryBundle
+from llama_index.schema import TextNode, NodeWithScore
+
+query = QueryBundle("I want a dog.")
+
+scored_nodes = [
+    NodeWithScore(node=TextNode(text="This is a cat"), score=0.6),
+    NodeWithScore(node=TextNode(text="This is a dog"), score=0.4),
+]
+
+reranked_nodes = rerank.postprocess_nodes(
+    scored_nodes, query_bundle=query
+)
+
+from llama_index.indices.postprocessor import MetadataReplacementPostProcessor
+
+postproc = MetadataReplacementPostProcessor(target_metadata_key="window")
+
+from llama_index.schema import NodeWithScore
+from copy import deepcopy
+
+scored_nodes = [NodeWithScore(node=x, score=1.0) for x in nodes]
+nodes_old = [deepcopy(n) for n in nodes]
+
+replaced_nodes = postproc.postprocess_nodes(scored_nodes)
+
+from llama_index.indices.postprocessor import SentenceTransformerRerank
+
+rerank = SentenceTransformerRerank(
+    top_n=2, model="BAAI/bge-reranker-base"
+)
+
+from llama_index import QueryBundle
+from llama_index.schema import TextNode, NodeWithScore
+
+query = QueryBundle("I want a dog.")
+
+scored_nodes = [
+    NodeWithScore(node=TextNode(text="This is a cat"), score=0.6),
+    NodeWithScore(node=TextNode(text="This is a dog"), score=0.4),
+]
+
+reranked_nodes = rerank.postprocess_nodes(
+    scored_nodes, query_bundle=query
+)
+
+from llama_index.indices.postprocessor import MetadataReplacementPostProcessor
+
+postproc = MetadataReplacementPostProcessor(target_metadata_key="window")
+
+from llama_index.schema import NodeWithScore
+from copy import deepcopy
+
+scored_nodes = [NodeWithScore(node=x, score=1.0) for x in nodes]
+nodes_old = [deepcopy(n) for n in nodes]
+
+replaced_nodes = postproc.postprocess_nodes(scored_nodes)
+
+from llama_index.indices.postprocessor import SentenceTransformerRerank
+
+rerank = SentenceTransformerRerank(
+    top_n=2, model="BAAI/bge-reranker-base"
+)
+
+from llama_index import QueryBundle
+from llama_index.schema import TextNode, NodeWithScore
+
+query = QueryBundle("I want a dog.")
+
+scored_nodes = [
+    NodeWithScore(node=TextNode(text="This is a cat"), score=0.6),
+    NodeWithScore(node=TextNode(text="This is a dog"), score=0.4),
+]
+
+reranked_nodes = rerank.postprocess_nodes(
+    scored_nodes, query_bundle=query
+)
+
+from llama_index.indices.postprocessor import MetadataReplacementPostProcessor
+
+postproc = MetadataReplacementPostProcessor(target_metadata_key="window")
+
+from llama_index.schema import NodeWithScore
+from copy import deepcopy
+
+scored_nodes = [NodeWithScore(node=x, score=1.0) for x in nodes]
+nodes_old = [deepcopy(n) for n in nodes]
+
+replaced_nodes = postproc.postprocess_nodes(scored_nodes)
+
+from llama_index.indices.postprocessor import SentenceTransformerRerank
+
+rerank = SentenceTransformerRerank(
+    top_n=2, model="BAAI/bge-reranker-base"
+)
+
+from llama_index import QueryBundle
+from llama_index.schema import TextNode, NodeWithScore
+
+query = QueryBundle("I want a dog.")
+
+scored_nodes = [
+    NodeWithScore(node=TextNode(text="This is a cat"), score=0.6),
+    NodeWithScore(node=TextNode(text="This is a dog"), score=0.4),
+]
+
+reranked_nodes = rerank.postprocess_nodes(
+    scored_nodes, query_bundle=query
+)
+
+from llama_index.indices.postprocessor import MetadataReplacementPostProcessor
+
+postproc = MetadataReplacementPostProcessor(target_metadata_key="window")
+
+from llama_index.schema import NodeWithScore
+from copy import deepcopy
+
+scored_nodes = [NodeWithScore(node=x, score=1.0
